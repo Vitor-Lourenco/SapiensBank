@@ -10,7 +10,7 @@ public class Conta
     public decimal Limite { get; set; }
 
     [JsonIgnore]
-    public decimal SaldoDisponível => Saldo + Limite;
+    public decimal SaldoDisponivel => Saldo + Limite;
 
     public Conta(int numero, string cliente, string cpf, string senha, decimal limite = 0)
     {
@@ -19,5 +19,45 @@ public class Conta
         Cpf = cpf;
         Senha = senha;
         Limite = limite;
+    }
+
+    // --- NOVOS MÉTODOS ---
+
+    public void Depositar(decimal valor)
+    {
+        if (valor > 0)
+        {
+            Saldo += valor;
+        }
+    }
+
+    public bool Sacar(decimal valor)
+    {
+        // Verifica se o valor do saque é maior que o saldo + limite
+        if (valor > SaldoDisponivel)
+        {
+            return false; // Saldo insuficiente
+        }
+        
+        Saldo -= valor;
+        return true;
+    }
+
+    public void AumentarLimite(decimal valor)
+    {
+        if (valor > 0)
+        {
+            Limite += valor;
+        }
+    }
+
+    public void DiminuirLimite(decimal valor)
+    {
+        if (valor > 0)
+        {
+            Limite -= valor;
+            // Opcional: Impedir que o limite fique negativo se desejar
+            if (Limite < 0) Limite = 0;
+        }
     }
 }

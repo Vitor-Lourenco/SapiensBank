@@ -1,4 +1,4 @@
-﻿using static System.Console ;
+﻿using static System.Console;
 
 public class UX
 {
@@ -18,6 +18,8 @@ public class UX
         WriteLine(" [2] Listar Contas");
         WriteLine(" [3] Efetuar Saque");
         WriteLine(" [4] Efetuar Depósito");
+        WriteLine(" [5] Aumentar Limite");
+        WriteLine(" [6] Diminuir Limite");
         ForegroundColor = ConsoleColor.Red;
         WriteLine("\n [9] Sair");
         ForegroundColor = ConsoleColor.White;
@@ -26,16 +28,26 @@ public class UX
         Write(" Digite a opção desejada: ");
         var opcao = ReadLine() ?? "";
         ForegroundColor = ConsoleColor.White;
+        
         switch (opcao)
         {
             case "1": CriarConta(); break;
             case "2": MenuListarContas(); break;
+            case "3": RealizarSaque(); break;
+            case "4": RealizarDeposito(); break;
+            case "5": AlterarLimite(aumentar: true); break;
+            case "6": AlterarLimite(aumentar: false); break;
         }
+
         if (opcao != "9")
         {
             Executar();
         }
-        _banco.SaveContas();
+        else
+        {
+            // Salva ao sair
+            _banco.SaveContas();
+        }
     }
 
     private void CriarConta()
@@ -65,15 +77,87 @@ public class UX
         {
             WriteLine($" Conta: {conta.Numero} - {conta.Cliente}");
             WriteLine($" Saldo: {conta.Saldo:C} | Limite: {conta.Limite:C}");
-            WriteLine($" Saldo Disponível: {conta.SaldoDisponível:C}\n");
+            WriteLine($" Disponível: {conta.SaldoDisponivel:C}\n");
         }
         CriarRodape();
     }
 
-    private void CriarLinha()
+    // --- NOVAS FUNÇÕES DE INTERAÇÃO ---
+
+    private Conta? BuscarConta()
     {
-        WriteLine("-------------------------------------------------");
+        Write(" Digite o número da conta: ");
+        if (int.TryParse(ReadLine(), out int numero))
+        {
+            var conta = _banco.Contas.FirstOrDefault(c => c.Numero == numero);
+            if (conta == null)
+            {
+                WriteLine(" Conta não encontrada!");
+            }
+            return conta;
+        }
+        WriteLine(" Número inválido.");
+        return null;
     }
+
+    private void RealizarSaque()
+    {
+        CriarTitulo(_titulo + " - Saque");
+        var conta = BuscarConta();
+        if (conta != null)
+        {
+            Write(" Valor do saque: ");
+            if (decimal.TryParse(ReadLine(), out decimal valor))
+            {
+                if (conta.Sacar(valor))
+                    WriteLine(" Saque realizado com sucesso!");
+                else
+                    WriteLine(" Saldo insuficiente!");
+            }
+            else WriteLine(" Valor inválido.");
+        }
+        CriarRodape();
+    }
+
+    private void RealizarDeposito()
+    {
+        CriarTitulo(_titulo + " - Depósito");
+        var conta = BuscarConta();
+        if (conta != null)
+        {
+            Write(" Valor do depósito: ");
+            if (decimal.TryParse(ReadLine(), out decimal valor))
+            {
+                conta.Depositar(valor);
+                WriteLine(" Depósito realizado com sucesso!");
+            }
+            else WriteLine(" Valor inválido.");
+        }
+        CriarRodape();
+    }
+
+    private void AlterarLimite(bool aumentar)
+    {
+        string acao = aumentar ? "Aumentar" : "Diminuir";
+        CriarTitulo($"{_titulo} - {acao} Limite");
+        
+        var conta = BuscarConta();
+        if (conta != null)
+        {
+            Write($" Valor para {acao.ToLower()} o limite: ");
+            if (decimal.TryParse(ReadLine(), out decimal valor))
+            {
+                if (aumentar) conta.AumentarLimite(valor);
+                else conta.DiminuirLimite(valor);
+                
+                WriteLine(" Limite atualizado com sucesso!");
+            }
+            else WriteLine(" Valor inválido.");
+        }
+        CriarRodape();
+    }
+
+    private void CriarLinha() => WriteLine("-------------------------------------------------");
 
     private void CriarTitulo(string titulo)
     {
@@ -90,11 +174,9 @@ public class UX
     {
         CriarLinha();
         ForegroundColor = ConsoleColor.Green;
-        if (mensagem != null)
-            WriteLine(" " + mensagem);
+        if (mensagem != null) WriteLine(" " + mensagem);
         Write(" ENTER para continuar");
         ForegroundColor = ConsoleColor.White;
         ReadLine();
     }
-
 }
